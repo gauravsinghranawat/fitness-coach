@@ -2,7 +2,7 @@
 
 Log workouts, meals and weight; get workout and meal suggestions from Claude based on your own history. Built with Expo (Android, iOS, web) and Supabase.
 
-**Status:** milestone 1 of 5 — sign-in, onboarding with calorie/protein targets, weight logging, database with row-level security. See `CLAUDE.md` for the roadmap.
+**Status:** milestone 2 of 5 — sign-in, onboarding with calorie/protein targets, a workout logger (sets, RPE, rest timer, "last time" hints, custom exercises), a food log with manual macros against your targets, and body weight / waist / sleep logging. Database uses row-level security. See `CLAUDE.md` for the roadmap.
 
 ## First-time setup (about 15 minutes)
 

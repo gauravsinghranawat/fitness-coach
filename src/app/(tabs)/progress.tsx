@@ -17,7 +17,6 @@ export default function Progress() {
       supabase
         .from('body_metrics')
         .select('id, date, weight_kg, waist_cm, sleep_hrs')
-        .not('weight_kg', 'is', null)
         .order('date', { ascending: false })
         .limit(14)
         .then(({ data }) => setRows((data as BodyMetric[]) ?? []));
@@ -28,7 +27,7 @@ export default function Progress() {
     <Screen>
       <Title subtitle="Charts for weight, training volume and food arrive in milestone 4.">Progress</Title>
       <Card>
-        <Label>Recent weigh-ins</Label>
+        <Label>Recent body log</Label>
         {rows === null ? (
           <Body muted>Loading…</Body>
         ) : rows.length === 0 ? (
@@ -37,7 +36,15 @@ export default function Progress() {
           rows.map((r) => (
             <View key={r.id} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: space.xs }}>
               <Body muted>{shortDate(r.date)}</Body>
-              <Body>{r.weight_kg} kg</Body>
+              <Body>
+                {[
+                  r.weight_kg !== null ? `${r.weight_kg} kg` : null,
+                  r.waist_cm !== null ? `waist ${r.waist_cm} cm` : null,
+                  r.sleep_hrs !== null ? `${r.sleep_hrs} h sleep` : null,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </Body>
             </View>
           ))
         )}

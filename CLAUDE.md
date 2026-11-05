@@ -15,6 +15,10 @@ A personal fitness app: log workouts, meals and body metrics; Claude suggests th
 src/app/_layout.tsx        Root: AuthProvider + Stack.Protected guards (signed out → sign-in, not onboarded → onboarding, else tabs)
 src/app/(tabs)/            Today, Workout, Food, Progress, Coach
 src/app/edit-profile.tsx   Modal reusing ProfileForm
+src/app/session/[id].tsx   Active / past workout: sets, rest timer, finish (in progress = duration_min is null)
+src/app/add-meal.tsx       Modal to add/edit/delete a meal (params: id | date, type)
+src/components/ExercisePicker.tsx, RestTimer.tsx
+src/lib/workouts.ts, meals.ts, numbers.ts   Volume/set formatting, macro totals, number parsing
 src/components/ui.tsx      Screen, Card, Button, Field, Choice, Stat… (use these, don't restyle per screen)
 src/components/ProfileForm.tsx   Onboarding / edit profile (5 steps)
 src/lib/auth.tsx           Session + profile context (useAuth)
@@ -49,7 +53,7 @@ EXPO_OFFLINE=1 npx expo export --platform android   # bundles without a device
 ## Milestones
 
 1. ✅ Foundation — project, login, migrations + RLS, onboarding saving profile and targets
-2. Logging — workout logger (sets, RPE, rest timer), food log with manual macros, body weight
+2. ✅ Logging — workout logger (sets, RPE, rest timer), food log with manual macros, body weight
 3. AI suggestions — suggest-workout, suggest-meals, Today screen shows the plan
 4. Smarter logging + progress — parse-meal, charts, PRs, weekly_summaries job
 5. Coach + polish — weekly review, chat, rate/spend limits, icon, optional web deploy

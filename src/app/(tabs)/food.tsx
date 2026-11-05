@@ -1,28 +1,115 @@
-import { Body, Card, Label, Screen, Title } from '@/components/ui';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { Pressable, View } from 'react-native';
+
+import { Body, Button, Card, ErrorText, IconButton, Label, Meter, Screen, Title } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
-import { DIET_LABELS } from '@/lib/types';
+import { addDays, localDate, relativeDate } from '@/lib/dates';
+import { mealTypeForNow, totals } from '@/lib/meals';
+import { fmt } from '@/lib/numbers';
+import { supabase } from '@/lib/supabase';
+import { DIET_LABELS, MEAL_LABELS, type Meal, type MealType } from '@/lib/types';
+import { space } from '@/theme';
+
+const MEAL_ORDER = Object.keys(MEAL_LABELS) as MealType[];
 
 export default function Food() {
   const { profile } = useAuth();
+  const [date, setDate] = useState(localDate());
+  const [meals, setMeals] = useState<Meal[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(() => {
+    supabase
+      .from('meals')
+      .select('id, date, meal_type, description, kcal, protein_g, carbs_g, fat_g, source')
+      .eq('date', date)
+      .order('created_at')
+      .then(({ data, error: e }) => {
+        setError(e?.message ?? null);
+        setMeals((data as Meal[]) ?? []);
+      });
+  }, [date]);
+
+  // Reload on focus (after adding a meal) and when the day changes.
+  useFocusEffect(load);
+
+  const isToday = date === localDate();
+  const sum = totals(meals ?? []);
+
+  function changeDay(delta: number) {
+    setMeals(null);
+    setDate((d) => addDays(d, delta));
+  }
+
   return (
     <Screen>
-      <Title subtitle="What you ate, against your targets.">Food</Title>
+      <Title subtitle={profile?.diet_type ? DIET_LABELS[profile.diet_type] : undefined}>Food</Title>
+
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <IconButton icon="chevron-back" label="Previous day" onPress={() => changeDay(-1)} />
+        <Body>{relativeDate(date)}</Body>
+        {isToday ? (
+          <View style={{ width: 36 }} />
+        ) : (
+          <IconButton icon="chevron-forward" label="Next day" onPress={() => changeDay(1)} />
+        )}
+      </View>
+
       <Card>
-        <Label>Coming in milestone 2</Label>
+        <Meter label="Calories" value={sum.kcal} target={profile?.target_kcal ?? null} unit="kcal" warnAbove={1.1} />
+        <Meter label="Protein" value={sum.protein} target={profile?.target_protein_g ?? null} unit="g" />
         <Body muted>
-          A food log with daily totals. In milestone 4 you'll type meals in plain words (“2 rotis, dal, curd”) and the
-          coach fills in the calories and protein for you to confirm.
+          Carbs {fmt(sum.carbs, 0)} g · Fat {fmt(sum.fat, 0)} g
         </Body>
       </Card>
-      {profile?.diet_type ? (
+
+      <Button
+        title="Add food"
+        onPress={() =>
+          router.push({
+            pathname: '/add-meal',
+            params: { date, type: isToday ? mealTypeForNow() : 'lunch' },
+          })
+        }
+      />
+      <ErrorText>{error}</ErrorText>
+
+      {meals === null ? (
+        <Body muted>Loading…</Body>
+      ) : meals.length === 0 ? (
         <Card>
-          <Label>Your settings</Label>
-          <Body>
-            {DIET_LABELS[profile.diet_type]} · {profile.target_kcal} kcal · {profile.target_protein_g} g protein
-          </Body>
-          {profile.allergies.length ? <Body muted>Avoiding: {profile.allergies.join(', ')}</Body> : null}
+          <Body muted>Nothing logged {isToday ? 'yet today' : 'this day'}.</Body>
         </Card>
-      ) : null}
+      ) : (
+        MEAL_ORDER.filter((type) => meals.some((m) => m.meal_type === type)).map((type) => {
+          const list = meals.filter((m) => m.meal_type === type);
+          return (
+            <Card key={type}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <Label>{MEAL_LABELS[type]}</Label>
+                <Label>{totals(list).kcal} kcal</Label>
+              </View>
+              {list.map((m) => (
+                <Pressable
+                  key={m.id}
+                  accessibilityRole="button"
+                  accessibilityHint="Edit or delete"
+                  onPress={() => router.push({ pathname: '/add-meal', params: { id: m.id } })}
+                  style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1, paddingVertical: space.xs })}
+                >
+                  <Body>{m.description}</Body>
+                  <Body muted>
+                    {m.kcal ?? '—'} kcal · {fmt(m.protein_g)} g protein
+                  </Body>
+                </Pressable>
+              ))}
+            </Card>
+          );
+        })
+      )}
+
+      {profile?.allergies.length ? <Body muted>Avoiding: {profile.allergies.join(', ')}</Body> : null}
     </Screen>
   );
 }

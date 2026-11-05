@@ -49,6 +49,11 @@ function Routes() {
       </Stack.Protected>
       <Stack.Protected guard={signedIn && onboarded}>
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="session/[id]" />
+        <Stack.Screen
+          name="add-meal"
+          options={{ presentation: 'modal', headerShown: true, title: 'Log food' }}
+        />
         <Stack.Screen
           name="edit-profile"
           options={{ presentation: 'modal', headerShown: true, title: 'Edit profile' }}

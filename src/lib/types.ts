@@ -60,3 +60,108 @@ export const EQUIPMENT_LABELS: Record<Equipment, string> = {
   home_dumbbells: 'Home, with dumbbells',
   bodyweight: 'No equipment',
 };
+
+// ---------------------------------------------------------------------------
+// Logging (milestone 2)
+// ---------------------------------------------------------------------------
+
+export type MuscleGroup =
+  | 'chest'
+  | 'back'
+  | 'shoulders'
+  | 'biceps'
+  | 'triceps'
+  | 'legs'
+  | 'glutes'
+  | 'core'
+  | 'full_body'
+  | 'cardio';
+
+export type ExerciseEquipment =
+  | 'barbell'
+  | 'dumbbell'
+  | 'machine'
+  | 'cable'
+  | 'bodyweight'
+  | 'kettlebell'
+  | 'band'
+  | 'cardio_machine'
+  | 'none';
+
+export interface Exercise {
+  id: string;
+  user_id: string | null;
+  name: string;
+  muscle_group: MuscleGroup;
+  equipment: ExerciseEquipment;
+  is_custom: boolean;
+}
+
+export interface Workout {
+  id: string;
+  date: string;
+  started_at: string | null;
+  /** Null while the workout is still in progress. */
+  duration_min: number | null;
+  notes: string | null;
+  source: 'manual' | 'ai_plan';
+}
+
+export interface WorkoutSet {
+  id: string;
+  workout_id: string;
+  exercise_id: string;
+  set_no: number;
+  reps: number | null;
+  weight_kg: number | null;
+  rpe: number | null;
+  distance_km: number | null;
+  time_sec: number | null;
+  created_at: string;
+}
+
+export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
+
+export interface Meal {
+  id: string;
+  date: string;
+  meal_type: MealType;
+  description: string;
+  kcal: number | null;
+  protein_g: number | null;
+  carbs_g: number | null;
+  fat_g: number | null;
+  source: 'manual' | 'ai_parsed';
+}
+
+export const MUSCLE_LABELS: Record<MuscleGroup, string> = {
+  chest: 'Chest',
+  back: 'Back',
+  shoulders: 'Shoulders',
+  biceps: 'Biceps',
+  triceps: 'Triceps',
+  legs: 'Legs',
+  glutes: 'Glutes',
+  core: 'Core',
+  full_body: 'Full body',
+  cardio: 'Cardio',
+};
+
+export const EXERCISE_EQUIPMENT_LABELS: Record<ExerciseEquipment, string> = {
+  barbell: 'Barbell',
+  dumbbell: 'Dumbbell',
+  machine: 'Machine',
+  cable: 'Cable',
+  bodyweight: 'Bodyweight',
+  kettlebell: 'Kettlebell',
+  band: 'Band',
+  cardio_machine: 'Cardio machine',
+  none: 'None',
+};
+
+export const MEAL_LABELS: Record<MealType, string> = {
+  breakfast: 'Breakfast',
+  lunch: 'Lunch',
+  dinner: 'Dinner',
+  snack: 'Snack',
+};

@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import type { ComponentProps, ReactNode } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -14,10 +15,21 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { radius, space, useTheme } from '@/theme';
 
-export function Screen({ children, scroll = true }: { children: ReactNode; scroll?: boolean }) {
+export function Screen({
+  children,
+  scroll = true,
+  footer,
+  edges = ['top', 'left', 'right'],
+}: {
+  children: ReactNode;
+  scroll?: boolean;
+  /** Pinned below the scrolling content (e.g. the rest timer). */
+  footer?: ReactNode;
+  edges?: ('top' | 'bottom' | 'left' | 'right')[];
+}) {
   const t = useTheme();
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: t.bg }} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: t.bg }} edges={edges}>
       {scroll ? (
         <ScrollView
           contentContainerStyle={styles.screenContent}
@@ -28,6 +40,7 @@ export function Screen({ children, scroll = true }: { children: ReactNode; scrol
       ) : (
         <View style={[styles.screenContent, { flex: 1 }]}>{children}</View>
       )}
+      {footer}
     </SafeAreaView>
   );
 }
@@ -96,10 +109,15 @@ export function Button({
   );
 }
 
-export function Field({ label, hint, ...props }: TextInputProps & { label: string; hint?: string }) {
+export function Field({
+  label,
+  hint,
+  compact,
+  ...props
+}: TextInputProps & { label: string; hint?: string; /** Fits several to a row (set inputs, macros). */ compact?: boolean }) {
   const t = useTheme();
   return (
-    <View style={{ marginBottom: space.lg }}>
+    <View style={compact ? { flex: 1, minWidth: 64 } : { marginBottom: space.lg }}>
       <Label>{label}</Label>
       <TextInput
         placeholderTextColor={t.muted}
@@ -167,6 +185,67 @@ export function Stat({ value, label }: { value: string; label: string }) {
   );
 }
 
+/** A horizontal bar showing value / target; turns to the danger colour past `warnAbove` × target. */
+export function Meter({
+  label,
+  value,
+  target,
+  unit,
+  warnAbove,
+}: {
+  label: string;
+  value: number;
+  target: number | null;
+  unit: string;
+  warnAbove?: number;
+}) {
+  const t = useTheme();
+  const pct = target ? Math.min(1, value / target) : 0;
+  const over = !!target && !!warnAbove && value > target * warnAbove;
+  return (
+    <View style={{ gap: space.xs }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+        <Text style={{ color: t.text, fontWeight: '600' }}>{label}</Text>
+        <Text style={{ color: t.muted }}>
+          {Math.round(value)}
+          {target ? ` / ${target}` : ''} {unit}
+        </Text>
+      </View>
+      <View style={[styles.meterTrack, { backgroundColor: t.accentSoft }]}>
+        <View
+          style={[styles.meterFill, { width: `${pct * 100}%`, backgroundColor: over ? t.danger : t.accent }]}
+        />
+      </View>
+    </View>
+  );
+}
+
+/** A small round icon-only button (delete, +/-). Always give it an accessibility label. */
+export function IconButton({
+  icon,
+  label,
+  onPress,
+  color,
+}: {
+  icon: ComponentProps<typeof Ionicons>['name'];
+  label: string;
+  onPress: () => void;
+  color?: string;
+}) {
+  const t = useTheme();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      hitSlop={8}
+      onPress={onPress}
+      style={({ pressed }) => [styles.iconButton, { opacity: pressed ? 0.6 : 1 }]}
+    >
+      <Ionicons name={icon} size={20} color={color ?? t.muted} />
+    </Pressable>
+  );
+}
+
 export function ErrorText({ children }: { children: ReactNode }) {
   const t = useTheme();
   if (!children) return null;
@@ -193,4 +272,7 @@ const styles = StyleSheet.create({
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   chip: { borderWidth: 1, borderRadius: radius.pill, paddingHorizontal: space.md, paddingVertical: space.sm },
   statValue: { fontSize: 24, fontWeight: '700' },
+  meterTrack: { height: 8, borderRadius: radius.pill, overflow: 'hidden' },
+  meterFill: { height: 8, borderRadius: radius.pill },
+  iconButton: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
 });
